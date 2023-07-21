@@ -1,133 +1,70 @@
-from textblob import TextBlob
-import pandas as pd
+from attr import has
 import streamlit as st
-import cleantext
+from helper import preprocessing_data, graph_sentiment, analyse_mention, analyse_hastag, download_data
 
-# Function to calculate sentiment score
-def score(x):
-    blob = TextBlob(x)
-    return blob.sentiment.polarity
-
-# Function to classify sentiment
-def analyze(x):
-    if x >= 0.5:
-        return 'Positive'
-    elif x <= -0.5:
-        return 'Negative'
-    else:
-        return 'Neutral'
-
-# Set custom CSS styles
-st.markdown(
-    """
-    <style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #001f3f;
-        color: white;
+st.set_page_config(
+    page_title="Data Analysis Web App",
+    page_icon="🧊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/everydaycodings/Data-Analysis-Web-App',
+        'Report a bug': "https://github.com/everydaycodings/Data-Analysis-Web-App/issues/new",
+        'About': "# This is a header. This is an *extremely* cool app!"
     }
-    .header {
-        font-size: 32px;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        color: #FFFFFF;
-    }
-    .expander {
-        background-color: #FFFFFF;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1.5rem;
-    }
-    .expander-title {
-        color: #FFFFFF;
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-    .text-input {
-        background-color: #001f3f;
-        color: white;
-    }
-    .text-input input {
-        color: white;
-    }
-    .cleaned-text {
-        white-space: pre-wrap;
-        color: #17a2b8;
-    }
-    .results-table {
-        background-color: #FFFFFF;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-top: 1rem;
-        padding: 1rem;
-    }
-    .download-button {
-        margin-top: 1rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
 )
 
-# Set header
-st.markdown("<h1 class='header'> Twitter Sentiment Analysis</h1>", unsafe_allow_html=True)
+st.title("Twitter Sentimental Analysis")
 
-# Analyze Text expander
-with st.expander('Analyze Text', expanded=True):
-    st.markdown("<h2 class='expander-title'>Analyze Text</h2>", unsafe_allow_html=True)
-    # Text input for user input
-    text = st.text_input('Text here:', value='', max_chars=None, key=None, type='default', help=None, on_change=None, args=None)
-    if text:
-        # Perform sentiment analysis on the text
-        blob = TextBlob(text)
-        st.write('Polarity:', round(blob.sentiment.polarity, 2))
-        st.write('Subjectivity:', round(blob.sentiment.subjectivity, 2))
+function_option = st.sidebar.selectbox("Select The Funtionality: ", ["Search By #Tag and Words", "Search By Username"])
 
-    # Pre-cleaned Text input
-    pre = st.text_input('Clean Text:', value='', max_chars=None, key=None, type='default', help=None, on_change=None, args=None)
-    if pre:
-        # Clean the text using cleantext package
-        cleaned_text = cleantext.clean(
-            pre, clean_all=False, extra_spaces=True,
-            stopwords=True, lowercase=True, numbers=True, punct=True
-        )
-        st.markdown(f"<div class='cleaned-text'>{cleaned_text}</div>", unsafe_allow_html=True)
+if function_option == "Search By #Tag and Words":
+    word_query = st.text_input("Enter the Hastag or any word")
 
-# Analyze CSV expander
-with st.expander('Analyze CSV', expanded=False):
-    st.markdown("<h2 class='expander-title'>Analyze CSV</h2>", unsafe_allow_html=True)
-    # File upload button for CSV
-    upl = st.file_uploader('Upload file')
+if function_option == "Search By Username":
+    word_query = st.text_input("Enter the Username ( Don't include @ )")
 
-    if upl:
-        # Read CSV file and perform sentiment analysis
-        df = pd.read_csv(upl, encoding='latin1')  # Specify the appropriate encoding
+number_of_tweets = st.slider("How many tweets You want to collect from {}".format(word_query), min_value=100,
+                             max_value=10000)
+st.info(
+    "1 Tweets takes approx 0.05 sec so you may have to wait {} minute for {} Tweets, So Please Have Patient.".format(
+        round((number_of_tweets * 0.05 / 60), 2), number_of_tweets))
 
-        # Check if 'Unnamed: 0' column exists before deleting it
-        if 'Unnamed: 0' in df.columns:
-            del df['Unnamed: 0']
+if st.button("Analysis Sentiment"):
+    data = preprocessing_data(word_query, number_of_tweets, function_option)
+    analyse = graph_sentiment(data)
+    mention = analyse_mention(data)
+    hastag = analyse_hastag(data)
 
-        df['score'] = df['tweets'].apply(score)
-        df['analysis'] = df['score'].apply(analyze)
-        st.markdown("<div class='results-table'>", unsafe_allow_html=True)
-        st.write(df.head(10))
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.write(" ")
+    st.write(" ")
+    st.header("Extracted and Preprocessed Dataset")
+    st.write(data)
+    download_data(data, label="twitter_sentiment_filtered")
+    st.write(" ")
 
-        # Function to convert DataFrame to CSV
-        @st.cache
-        def convert_df(df):
-            # IMPORTANT: Cache the conversion to prevent computation on every rerun
-            return df.to_csv().encode('utf-8')
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        st.markdown("### EDA On the Data")
 
-        # Convert DataFrame to CSV and create download button
-        csv = convert_df(df)
-        st.markdown("<div class='download-button'>", unsafe_allow_html=True)
-        st.download_button(
-            label="Download data as CSV",
-            data=csv,
-            file_name='sentiment.csv',
-            mime='text/csv',
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.text("Top 10 @Mentions in {} tweets".format(number_of_tweets))
+        st.bar_chart(mention)
+    with col2:
+        st.text("Top 10 Hastags used in {} tweets".format(number_of_tweets))
+        st.bar_chart(hastag)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.text("Top 10 Used Links for {} tweets".format(number_of_tweets))
+        st.bar_chart(data["links"].value_counts().head(10).reset_index())
+
+    with col4:
+        st.text("All the Tweets that containes top 10 links used")
+        filtered_data = data[data["links"].isin(data["links"].value_counts().head(10).reset_index()["index"].values)]
+        st.write(filtered_data)
+
+    st.subheader("Twitter Sentment Analysis")
+    st.bar_chart(analyse)
