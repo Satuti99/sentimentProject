@@ -35,6 +35,7 @@ Step 8: Deploy the web app to a hosting platform such as AWS.
 
 
 ## Demo
+https://github.com/Satuti99/sentimentProject/assets/115169702/da4561cc-92fa-43ef-8b55-ef7d90152b19
 
 
 
