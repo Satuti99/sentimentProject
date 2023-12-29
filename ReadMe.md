@@ -23,14 +23,14 @@ To deploy this project run
 
 ## Roadmap
 
-Step 1: Install Streamlit and other required libraries.
-Step 2: Create a Twitter Developer account and generate API keys.
-Step 3: Write Python code to authenticate with the Twitter API and extract tweets.
-Step 4: Preprocess the tweets by removing stop words, special characters, and URLs.
-Step 5: Use a pre-trained sentiment analysis model to assign sentiment scores to each tweet.
-Step 6: Store the data in a CSV file for easy access and manipulation.
-Step 7: Use Streamlit to create a web app that allows users to input a keyword and see the sentiment analysis results in real-time.
-Step 8: Deploy the web app to a hosting platform such as AWS.
+Step 1: Install Streamlit and other required libraries.\n
+Step 2: Create a Twitter Developer account and generate API keys.\n
+Step 3: Write Python code to authenticate with the Twitter API and extract tweets.\n
+Step 4: Preprocess the tweets by removing stop words, special characters, and URLs.\n
+Step 5: Use a pre-trained sentiment analysis model to assign sentiment scores to each tweet.\n
+Step 6: Store the data in a CSV file for easy access and manipulation.\n
+Step 7: Use Streamlit to create a web app that allows users to input a keyword and see the sentiment analysis results in real-time.\n
+Step 8: Deploy the web app to a hosting platform such as AWS.\n
 
 
 
